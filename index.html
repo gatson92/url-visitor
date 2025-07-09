@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>URL 순차 방문 도구</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 40px;
+      line-height: 1.6;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 5px;
+    }
+    input[type="number"] {
+      width: 60px;
+      padding: 6px;
+      margin-right: 5px;
+    }
+    button {
+      padding: 8px 16px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    .visited-log {
+      margin-top: 20px;
+      background: #f1f1f1;
+      padding: 10px;
+    }
+    #logList {
+      margin: 0;
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>URL 순차 자동 방문</h1>
+
+  <label>방문할 URL 10개 입력:</label><br>
+  <input type="text" id="url1" placeholder="URL 1">
+  <input type="text" id="url2" placeholder="URL 2">
+  <input type="text" id="url3" placeholder="URL 3">
+  <input type="text" id="url4" placeholder="URL 4">
+  <input type="text" id="url5" placeholder="URL 5">
+  <input type="text" id="url6" placeholder="URL 6">
+  <input type="text" id="url7" placeholder="URL 7">
+  <input type="text" id="url8" placeholder="URL 8">
+  <input type="text" id="url9" placeholder="URL 9">
+  <input type="text" id="url10" placeholder="URL 10">
+
+  <h3>방문 시간 텀 설정</h3>
+  <input type="number" id="hour" placeholder="시"> 시
+  <input type="number" id="minute" placeholder="분"> 분
+  <input type="number" id="second" placeholder="초"> 초
+
+  <br><br>
+  <button onclick="startVisiting()">시작</button>
+  <button onclick="stopVisiting()">종료</button>
+
+  <div class="visited-log" id="logBox">
+    <strong>방문 기록:</strong>
+    <ul id="logList"></ul>
+  </div>
+
+  <script>
+    let stopFlag = false;
+
+    function startVisiting() {
+      const urls = [];
+      for (let i = 1; i <= 10; i++) {
+        const url = document.getElementById('url' + i).value.trim();
+        if (url !== '') urls.push(url);
+      }
+
+      const hour = parseInt(document.getElementById('hour').value || 0);
+      const minute = parseInt(document.getElementById('minute').value || 0);
+      const second = parseInt(document.getElementById('second').value || 0);
+      const delay = (hour * 3600 + minute * 60 + second) * 1000;
+
+      if (urls.length === 0 || delay <= 0) {
+        alert("URL을 하나 이상 입력하고, 시간 간격도 설정해주세요.");
+        return;
+      }
+
+      localStorage.setItem("savedUrls", JSON.stringify(urls));
+      localStorage.setItem("savedDelay", delay);
+
+      location.href = `${location.pathname}?index=0`;
+    }
+
+    function stopVisiting() {
+      stopFlag = true;
+      alert("방문을 중단했습니다.");
+    }
+
+    function fillSavedInputs() {
+      const saved = localStorage.getItem("savedUrls");
+      const delay = parseInt(localStorage.getItem("savedDelay") || 0);
+
+      if (saved) {
+        const urls = JSON.parse(saved);
+        urls.forEach((url, i) => {
+          const input = document.getElementById("url" + (i + 1));
+          if (input) input.value = url;
+        });
+      }
+
+      if (delay > 0) {
+        const h = Math.floor(delay / 3600000);
+        const m = Math.floor((delay % 3600000) / 60000);
+        const s = Math.floor((delay % 60000) / 1000);
+        document.getElementById('hour').value = h;
+        document.getElementById('minute').value = m;
+        document.getElementById('second').value = s;
+      }
+    }
+
+    function logVisit(url) {
+      const logList = document.getElementById("logList");
+
+      const timestamp = new Date().toLocaleTimeString();
+      const li = document.createElement("li");
+      li.textContent = `✅ ${timestamp} 방문: ${url}`;
+      logList.appendChild(li);
+
+      // 저장: 기존 기록 + 추가
+      let logs = JSON.parse(localStorage.getItem("visitLogs") || "[]");
+      logs.push({ url, time: timestamp });
+      localStorage.setItem("visitLogs", JSON.stringify(logs));
+    }
+
+    function loadVisitLogs() {
+      const logs = JSON.parse(localStorage.getItem("visitLogs") || "[]");
+      const logList = document.getElementById("logList");
+      logs.forEach(log => {
+        const li = document.createElement("li");
+        li.textContent = `✅ ${log.time} 방문: ${log.url}`;
+        logList.appendChild(li);
+      });
+    }
+
+    window.addEventListener('load', () => {
+      fillSavedInputs();
+      loadVisitLogs();
+
+      const index = parseInt(new URLSearchParams(location.search).get("index"));
+      if (isNaN(index)) return;
+
+      const saved = localStorage.getItem("savedUrls");
+      const delay = parseInt(localStorage.getItem("savedDelay") || 0);
+      if (!saved || delay <= 0) return;
+
+      const urls = JSON.parse(saved);
+      if (index >= urls.length) {
+        alert("모든 URL 방문 완료!");
+        return;
+      }
+
+      const urlToVisit = urls[index];
+      logVisit(urlToVisit);
+
+      setTimeout(() => {
+        if (stopFlag) return;
+        const nextIndex = index + 1;
+        const nextUrl = `${location.pathname}?index=${nextIndex}`;
+        window.open(urlToVisit, '_blank'); // 새 탭 열기
+        location.href = nextUrl;
+      }, delay);
+    });
+  </script>
+</body>
+</html>
