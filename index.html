@@ -154,19 +154,17 @@
       if (!saved || delay <= 0) return;
 
       const urls = JSON.parse(saved);
-      if (index >= urls.length) {
-        alert("모든 URL 방문 완료!");
-        return;
-      }
+      if (urls.length === 0) return;
 
-      const urlToVisit = urls[index];
+      const safeIndex = index % urls.length;
+      const urlToVisit = urls[safeIndex];
       logVisit(urlToVisit);
 
       setTimeout(() => {
         if (stopFlag) return;
         const nextIndex = index + 1;
         const nextUrl = `${location.pathname}?index=${nextIndex}`;
-        window.open(urlToVisit, '_blank'); // 새 탭 열기
+        window.open(urlToVisit, '_blank');
         location.href = nextUrl;
       }, delay);
     });
