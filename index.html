@@ -1,526 +1,296 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-theme="light">
 <head>
-<meta charset="UTF-8" />
-<title>실시간 웹페이지 모니터링 & 자동 새로고침 관리</title>
-<style>
-  /* =============== 
-     :root 변수
-     사이트 전역에서 사용할 색상 및 스타일 변수 정의
-     변경 시 --bg-light, --btn-bg-light 등 변수값만 수정하면 전체 스타일 변경 가능
-  =============== */
-  :root {
-    --bg-light: #fafafa;            /* 기본 배경색 - 밝은 모드 */
-    --bg-dark: #121212;             /* 다크 모드 배경색 */
-    --text-light: #333;             /* 밝은 모드 텍스트 색상 */
-    --text-dark: #eee;              /* 다크 모드 텍스트 색상 */
-    --box-bg-light: #fff;           /* 밝은 모드 박스 배경 */
-    --box-bg-dark: #1e1e1e;         /* 다크 모드 박스 배경 */
-    --border-light: #ddd;           /* 밝은 모드 박스 테두리 */
-    --border-dark: #444;            /* 다크 모드 박스 테두리 */
-    --shadow-light: rgba(0,0,0,0.1);   /* 밝은 모드 그림자 */
-    --shadow-dark: rgba(255,255,255,0.1); /* 다크 모드 그림자 */
-    --accent-light: #007bff;        /* 밝은 모드 강조 색상 */
-    --accent-dark: #3399ff;         /* 다크 모드 강조 색상 */
-    --btn-bg-light: #007bff;        /* 버튼 배경색(밝은 모드) */
-    --btn-bg-dark: #3399ff;         /* 버튼 배경색(다크 모드) */
-    --btn-hover-light: #0056b3;     /* 버튼 호버색(밝은 모드) */
-    --btn-hover-dark: #2277dd;      /* 버튼 호버색(다크 모드) */
-    --btn-success-light: #28a745;   /* 성공 버튼 색상 */
-    --btn-success-dark: #3dcc6e;    
-    --btn-warning-light: #ffc107;   /* 경고 버튼 색상 */
-    --btn-warning-dark: #ffcc33;    
-    --btn-danger-light: #dc3545;    /* 위험 버튼 색상 */
-    --btn-danger-dark: #e76b73;     
-  }
+  <!-- 문서의 문자 인코딩을 UTF-8로 설정 (한글 포함 모든 문자 정상 표시) -->
+  <meta charset="UTF-8" />
+  <!-- 브라우저 탭에 표시될 제목 -->
+  <title>모니터링 대시보드</title>
+  <!-- 모바일/태블릿에서도 화면을 기기 너비에 맞추고 확대 축소 비율을 1로 설정 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    /* 전역 변수 정의: 기본 테마 색상 */
+    :root {
+      --bg-color: #fff;            /* 배경색 - 밝은 테마 */
+      --text-color: #222;          /* 텍스트 색상 */
+      --header-bg: #111;           /* 헤더 배경색 */
+      --header-text: #fff;         /* 헤더 텍스트 색상 */
+      --box-bg: #fff;              /* 모니터링 박스 배경 */
+      --box-border: #ccc;          /* 박스 테두리 */
+    }
 
-  /* 기본 바디 스타일 */
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    padding: 20px;
-    background-color: var(--bg-light);
-    color: var(--text-light);
-    transition: background-color 0.3s, color 0.3s;
-  }
+    /* 다크 테마 색상 변수 재정의 */
+    [data-theme="dark"] {
+      --bg-color: #121212;         /* 배경색 - 어두운 테마 */
+      --text-color: #e0e0e0;       /* 텍스트 색상 - 밝게 */
+      --header-bg: #1f1f1f;        /* 헤더 배경 어둡게 */
+      --header-text: #fff;         /* 헤더 텍스트 흰색 */
+      --box-bg: #1e1e1e;           /* 박스 배경 어둡게 */
+      --box-border: #333;          /* 테두리 어둡게 */
+    }
 
-  /* 다크모드 적용 시 */
-  body.dark {
-    background-color: var(--bg-dark);
-    color: var(--text-dark);
-  }
+    /* 전체 페이지 기본 스타일 */
+    body {
+      margin: 0;                          /* 여백 제거 */
+      background: var(--bg-color);       /* 배경색 전역 변수 적용 */
+      font-family: 'Segoe UI', Roboto, sans-serif;  /* 본문 글꼴 지정 */
+      color: var(--text-color);          /* 텍스트 색상 전역 변수 */
+    }
 
-  /* 타이틀 스타일 */
-  h2 {
-    margin-bottom: 20px;
-    font-weight: 700;
-    font-size: 1.6rem;
-    letter-spacing: -0.03em;
-    color: var(--accent-light);
-    transition: color 0.3s;
-  }
-  body.dark h2 {
-    color: var(--accent-dark);
-  }
+    /* 상단 헤더 스타일 */
+    header {
+      background-color: var(--header-bg);      /* 헤더 배경색 */
+      color: var(--header-text);              /* 헤더 텍스트 색상 */
+      padding: 20px 40px;                     /* 위아래20px, 좌우40px 여백 */
+      display: flex;                          /* 내부 요소 가로배치 */
+      justify-content: space-between;         /* 좌우 정렬 */
+      align-items: center;                    /* 수직 중앙정렬 */
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);  /* 그림자 효과 */
+    }
 
-  /* + 새 모니터링 창 추가 버튼 */
-  #addButton {
-    margin-bottom: 24px;
-    padding: 14px 22px;
-    background-color: var(--btn-bg-light);
-    color: white;
-    font-size: 17px;
-    font-weight: 600;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    box-shadow: 0 4px 8px var(--shadow-light);
-    transition: background-color 0.25s ease, box-shadow 0.25s ease;
-  }
-  #addButton:hover {
-    background-color: var(--btn-hover-light);
-    box-shadow: 0 6px 12px var(--shadow-light);
-  }
-  body.dark #addButton {
-    background-color: var(--btn-bg-dark);
-    box-shadow: 0 4px 8px var(--shadow-dark);
-  }
-  body.dark #addButton:hover {
-    background-color: var(--btn-hover-dark);
-    box-shadow: 0 6px 12px var(--shadow-dark);
-  }
+    /* 헤더 내 제목 텍스트 */
+    header h1 {
+      font-size: 1.8rem;             /* 글자 크기 */
+      font-weight: 600;              /* 글자 굵기 */
+      letter-spacing: 0.5px;         /* 자간 */
+      margin: 0;                     /* 기본 마진 제거 */
+    }
 
-  /* 컨테이너: 모든 모니터링 창(div) 배치용 flex 박스 */
-  #container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 18px;
-  }
+    /* 다크모드 토글 버튼 스타일 */
+    #toggleThemeBtn {
+      padding: 8px 16px;             /* 여백 */
+      background: #444;              /* 배경색 */
+      color: #fff;                   /* 글자색 */
+      border: none;                  /* 테두리 제거 */
+      border-radius: 6px;            /* 모서리 둥글게 */
+      cursor: pointer;              /* 마우스 포인터 변경 */
+    }
 
-  /* 각 모니터링 박스 스타일 */
-  .urlBox {
-    position: relative;               /* 삭제 버튼 위치 조절 위해 relative 필요 */
-    flex: 0 0 calc(33.33% - 12px);  /* 3등분 너비 */
-    box-sizing: border-box;
-    background-color: var(--box-bg-light);
-    border: 1px solid var(--border-light);
-    border-radius: 14px;
-    padding: 18px;
-    box-shadow: 0 4px 16px var(--shadow-light);
-    display: flex;
-    flex-direction: column;
-    transition: box-shadow 0.3s ease, background-color 0.3s, border-color 0.3s;
-  }
-  body.dark .urlBox {
-    background-color: var(--box-bg-dark);
-    border-color: var(--border-dark);
-    box-shadow: 0 4px 16px var(--shadow-dark);
-  }
-  .urlBox:hover {
-    box-shadow: 0 8px 24px var(--shadow-light);
-  }
-  body.dark .urlBox:hover {
-    box-shadow: 0 8px 24px var(--shadow-dark);
-  }
+    /* 전역 컨트롤 영역: 반복 횟수, 간격 입력과 버튼 */
+    #globalControlsWrapper {
+      display: flex;                      /* 가로 정렬 */
+      justify-content: space-between;    /* 좌우 정렬 */
+      align-items: center;               /* 수직 중앙 정렬 */
+      padding: 20px 40px;                /* 여백 */
+      background: #f8f8f8;               /* 배경색 */
+      border-bottom: 1px solid #ccc;     /* 하단 구분선 */
+    }
 
-  /* =============== 삭제 버튼(X) 스타일 ===============
-     기능: 해당 모니터링 창을 삭제하는 버튼
-     옵션: 크기, 위치, 색상 등 조절 가능
-     변경법: .deleteBtn 관련 속성 수정, 특히 position, top, right 값으로 위치 변경 가능
-  =============================================== */
-  .deleteBtn {
-    position: absolute;   /* 절대 위치 지정하여 URL 입력창 겹침 방지 */
-    top: 16px;            /* 위에서 16px 떨어짐 */
-    right: 16px;          /* 오른쪽에서 16px 떨어짐 */
-    width: 30px;          /* 버튼 가로 크기 */
-    height: 30px;         /* 버튼 세로 크기 */
-    font-size: 20px;      /* X 표시 글자 크기 */
-    line-height: 30px;    /* 수직 정렬 위해 line-height == 높이 */
-    text-align: center;   /* 글자 중앙 정렬 */
-    background: #e74c3c;  /* 빨간색 배경 */
-    border-radius: 50%;   /* 동그란 모양 */
-    color: white;
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-    transition: background-color 0.25s ease, box-shadow 0.25s ease;
-    z-index: 10;          /* 다른 요소 위에 표시 */
-  }
-  .deleteBtn:hover {
-    background-color: #c0392b;
-    box-shadow: 0 3px 9px rgba(0,0,0,0.35);
-  }
+    /* 숫자 입력창 (횟수, 간격) */
+    #globalControls input[type="number"] {
+      width: 80px;            /* 입력창 너비 */
+      padding: 6px;           /* 안쪽 여백 */
+      margin-right: 10px;     /* 오른쪽 여백 */
+    }
 
-  /* =============== URL 입력창 스타일 ===================
-     기능: 모니터링할 웹 페이지 URL 입력용 텍스트박스
-     옵션: 너비, 높이, 폰트 크기, 패딩 조절 가능
-     변경법: .urlBox input[type="text"] 에서 width, padding, font-size 수정
-     URL 입력창과 삭제 버튼이 겹치지 않게 오른쪽 padding 넉넉히 둠
-  ================================================== */
-  .urlBox input[type="text"] {
-    width: 80%;                     /* 가로 길이 약간 줄임 (기존 100%->95%) */
-    padding: 12px 48px 12px 14px;  /* 오른쪽 충분한 여백(48px)으로 삭제 버튼 공간 확보 */
-    margin-bottom: 12px;
-    font-size: 15px;
-    font-weight: 500;
-    border-radius: 8px;
-    border: 1.8px solid #bbb;
-    box-sizing: border-box;
-    box-shadow: inset 0 2px 6px rgb(0 0 0 / 0.07);
-    transition: border-color 0.3s ease, background-color 0.3s, color 0.3s, box-shadow 0.3s;
-  }
-  .urlBox input[type="text"]:focus {
-    outline: none;
-    border-color: var(--btn-bg-light);
-    box-shadow: 0 0 10px var(--btn-bg-light);
-  }
-  body.dark .urlBox input[type="text"] {
-    background-color: #222;
-    border-color: #555;
-    color: #eee;
-    box-shadow: inset 0 2px 6px rgb(255 255 255 / 0.05);
-  }
-  body.dark .urlBox input[type="text"]:focus {
-    border-color: var(--btn-bg-dark);
-    box-shadow: 0 0 10px var(--btn-bg-dark);
-  }
+    /* 반복 시작 버튼 스타일 */
+    #globalControls button {
+      padding: 8px 16px;
+      font-weight: bold;
+      background: #ffc107;     /* 노란색 배경 */
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-left: 5px;
+    }
 
-  /* =============== 반복횟수/시간 입력창 스타일 ===================
-     기능: 자동 새로고침 반복 횟수, 반복 간격(초) 입력용 숫자박스
-     옵션: 너비, 높이, 폰트 크기, 여백 등 수정 가능
-     변경법: .controls input[type="number"]의 width/padding/font-size 변경
-     여기서는 가로 60px로 고정, 높이는 적당히 패딩으로 유지
-  ================================================== */
-  .controls {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
+    /* 모니터링 박스 추가 버튼 스타일 */
+    #addButton {
+      padding: 10px 20px;
+      background: #007bff;     /* 파란 배경 */
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
 
-  .controls input[type="number"] {
-    width: 60px;             /* 숫자 4자리 정도 보이도록 가로 길이 고정 */
-    padding: 6px 8px;        /* 높이 확보 위한 패딩 */
-    font-size: 15px;
-    font-weight: 600;
-    border-radius: 6px;
-    border: 1.5px solid #bbb;
-    box-sizing: border-box;
-    box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.1);
-    transition: border-color 0.3s ease, background-color 0.3s, color 0.3s;
-  }
-  .controls input[type="number"]:focus {
-    outline: none;
-    border-color: var(--btn-bg-light);
-    box-shadow: 0 0 8px var(--btn-bg-light);
-  }
-  body.dark .controls input[type="number"] {
-    background-color: #222;
-    border-color: #555;
-    color: #eee;
-    box-shadow: inset 0 1px 3px rgb(255 255 255 / 0.06);
-  }
-  body.dark .controls input[type="number"]:focus {
-    border-color: var(--btn-bg-dark);
-    box-shadow: 0 0 8px var(--btn-bg-dark);
-  }
+    /* 전체 박스 컨테이너 스타일 */
+    #container {
+      display: flex;
+      flex-wrap: wrap;         /* 줄바꿈 허용 */
+      gap: 16px;               /* 박스 사이 간격 */
+      padding: 20px 40px;
+    }
 
-  /* =============== 반복 시작 버튼 스타일 ===================
-     기능: 새로고침 반복 시작/중단 토글 버튼
-     옵션: 색상, 크기, 호버 효과 등 변경 가능
-     변경법: .repeatBtn 관련 CSS 수정
-  ================================================== */
-  .repeatBtn {
-    padding: 8px 16px;
-    font-size: 15px;
-    font-weight: 600;
-    border-radius: 12px;
-    border: none;
-    cursor: pointer;
-    background: linear-gradient(135deg, var(--btn-warning-light), #d4af37);
-    color: #3d2e00;
-    box-shadow: 0 4px 15px rgba(212,175,55,0.6);
-    transition: background 0.4s ease, box-shadow 0.4s ease, color 0.3s ease;
-    user-select: none;
-    margin-bottom: 10px;
-  }
-  .repeatBtn.active {
-    background: linear-gradient(135deg, var(--btn-danger-light), #a00000);
-    color: #fff;
-    box-shadow: 0 5px 20px rgba(160,0,0,0.8);
-  }
-  .repeatBtn:hover:not(.active) {
-    background: linear-gradient(135deg, #e6be26, #b08800);
-    box-shadow: 0 6px 20px rgba(212,175,55,0.75);
-  }
-  .repeatBtn.active:hover {
-    background: linear-gradient(135deg, #c00000, #700000);
-    box-shadow: 0 7px 24px rgba(160,0,0,0.9);
-  }
-  body.dark .repeatBtn {
-    background: linear-gradient(135deg, var(--btn-warning-dark), #f4db6e);
-    color: #3d2e00;
-    box-shadow: 0 4px 15px rgba(255,255,150,0.4);
-  }
-  body.dark .repeatBtn.active {
-    background: linear-gradient(135deg, var(--btn-danger-dark), #b02424);
-    color: #fff;
-    box-shadow: 0 5px 20px rgba(255,80,80,0.85);
-  }
-  body.dark .repeatBtn:hover:not(.active) {
-    background: linear-gradient(135deg, #ffe76a, #cfa700);
-    box-shadow: 0 6px 20px rgba(255,255,150,0.6);
-  }
-  body.dark .repeatBtn.active:hover {
-    background: linear-gradient(135deg, #d04141, #7c2222);
-    box-shadow: 0 7px 24px rgba(255,80,80,0.95);
-  }
+    /* 개별 URL 박스 */
+    .urlBox {
+      position: relative;
+      background: var(--box-bg);
+      border: 1px solid var(--box-border);
+      padding: 12px;
+      border-radius: 8px;
+      width: calc(30% - 10px);  /* 3등분 (반응형 고려 시 변경 가능) */
+      box-sizing: border-box;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
 
-  /* iframe 스타일: 각 모니터링 창에서 실제 페이지 보여주는 영역 */
-  iframe {
-    width: 100%;                   /* 너비 100% */
-    height: 280px;                 /* 높이 고정 */
-    border: 1px solid var(--border-light);
-    border-radius: 12px;
-    flex-grow: 1;                  /* 남은 공간 채우기 */
-    transition: border-color 0.3s ease, background-color 0.3s ease;
-  }
-  body.dark iframe {
-    border-color: var(--border-dark);
-    background-color: #111;
-  }
+    /* URL 입력창 */
+    .urlBox input[type="text"] {
+      width: 88%;
+      padding: 8px 40px 8px 10px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
 
-  /* 상태 표시 영역 */
-  .status {
-    font-size: 13px;
-    font-weight: 500;
-    color: #555;
-    margin-top: 6px;
-    min-height: 20px;      /* 최소 높이로 위치 안정화 */
-    transition: color 0.3s ease;
-  }
-  body.dark .status {
-    color: #ccc;
-  }
+    /* 삭제 버튼 스타일 */
+    .deleteBtn {
+      position: absolute;
+      top: 15px;
+      right: 14px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      font-size: 16px;
+      cursor: pointer;
+    }
 
-  /* =============== 다크모드 토글 버튼 ===============
-     기능: 화면 우측 상단에 위치해 라이트/다크모드 토글
-     옵션: 위치, 색상, 아이콘 변경 가능
-     변경법: #darkToggle 스타일 및 내부 텍스트 변경
-  ================================================== */
-  #darkToggle {
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    background-color: var(--btn-bg-light);
-    border: none;
-    color: white;
-    font-size: 20px;
-    padding: 12px 20px;
-    border-radius: 10px;
-    cursor: pointer;
-    box-shadow: 0 3px 10px var(--shadow-light);
-    transition: background-color 0.3s ease;
-    z-index: 1000;
-    user-select: none;
-  }
-  #darkToggle:hover {
-    background-color: var(--btn-hover-light);
-  }
-  body.dark #darkToggle {
-    background-color: var(--btn-bg-dark);
-    box-shadow: 0 3px 10px var(--shadow-dark);
-  }
-  body.dark #darkToggle:hover {
-    background-color: var(--btn-hover-dark);
-  }
-</style>
+    /* 상태 메시지 영역 */
+    .status {
+      font-size: 13px;
+      color: #666;
+      margin-top: 6px;
+      min-height: 18px;
+    }
+
+    /* 웹사이트 표시 iframe */
+    iframe {
+      width: 100%;
+      height: 250px;
+      margin-top: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+    }
+  </style>
 </head>
 <body>
-  <h2>실시간 웹페이지 모니터링 & 자동 새로고침 관리</h2>
-  <button id="addButton">+ 새 모니터링 창 추가</button>
+  <!-- 상단 타이틀 영역 -->
+  <header>
+    <h1>🌐 실시간 웹사이트 리프레셔</h1>
+    <button id="toggleThemeBtn">다크모드</button>
+  </header>
 
-  <!-- 모니터링 창들이 추가되는 컨테이너 -->
+  <!-- 반복 횟수, 간격 컨트롤 및 창 추가 버튼 영역 -->
+  <div id="globalControlsWrapper">
+    <div id="globalControls">
+      <input id="globalCount" type="number" placeholder="횟수" min="1" />
+      <input id="globalInterval" type="number" placeholder="간격(초)" step="0.1" min="0.5" />
+      <button id="globalRepeatBtn">반복 시작</button>
+    </div>
+    <button id="addButton">+ 새 모니터링 창 추가</button>
+  </div>
+
+  <!-- 모니터링 박스들이 추가될 컨테이너 -->
   <div id="container"></div>
 
-  <!-- 다크모드 토글 버튼 -->
-  <button id="darkToggle" aria-label="다크모드 토글">🌙</button>
-
+  <!-- 스크립트 시작 -->
   <script>
-    // 컨테이너, 추가 버튼, 다크모드 토글 버튼 요소 참조
     const container = document.getElementById('container');
     const addButton = document.getElementById('addButton');
-    const darkToggle = document.getElementById('darkToggle');
+    const globalCountInput = document.getElementById('globalCount');
+    const globalIntervalInput = document.getElementById('globalInterval');
+    const globalRepeatBtn = document.getElementById('globalRepeatBtn');
+    const toggleThemeBtn = document.getElementById('toggleThemeBtn');
 
-    /**
-     * 새로운 모니터링 박스 생성 함수
-     * 기능: URL 입력, 반복 새로고침 횟수/간격 입력, 새로고침 시작/중단, 삭제 가능
-     * 변경 시: 각 요소 생성 부분 참고하여 수정
-     */
-    function createUrlBox() {
-      const box = document.createElement("div");
-      box.className = "urlBox";
+    let globalTimer = null;
+    let globalCount = 0;
+    let globalRunning = false;
 
-      // 삭제 버튼 생성 (X)
-      const deleteBtn = document.createElement("button");
-      deleteBtn.className = "deleteBtn";
-      deleteBtn.title = "삭제";
-      deleteBtn.textContent = "×";
-
-      // 삭제 버튼 클릭 시 이벤트: 타이머 중단 후 박스 삭제
-      deleteBtn.addEventListener("click", () => {
-        //if (confirm("이 모니터링 창을 삭제하시겠습니까?")) {
-          clearInterval(timer);
-          box.remove();
-        //}
-      });
-
-      // URL 입력창 생성
-      const urlInput = document.createElement("input");
-      urlInput.type = "text";
-      urlInput.placeholder = "URL 입력 (예: https://example.com)";
-
-      // iframe 생성 (입력한 URL 페이지 표시용)
-      const iframe = document.createElement("iframe");
-
-      // 반복 횟수 입력창 생성
-      const repeatCount = document.createElement("input");
-      repeatCount.type = "number";
-      repeatCount.placeholder = "횟수";
-      repeatCount.min = 1;
-
-      // 반복 시간(초) 입력창 생성
-      const repeatInterval = document.createElement("input");
-      repeatInterval.type = "number";
-      repeatInterval.placeholder = "초 (최소 0.5)";
-      repeatInterval.min = 0.5;
-      repeatInterval.step = 0.1;
-
-      // 반복 시작/중단 버튼 생성
-      const repeatBtn = document.createElement("button");
-      repeatBtn.textContent = "반복 시작";
-      repeatBtn.className = "repeatBtn";
-
-      // 상태 표시 영역 생성 (텍스트 상태 보여줌)
-      const status = document.createElement("div");
-      status.className = "status";
-
-      // URL 입력창에서 Enter키 누르면 바로 URL 로드
-      urlInput.addEventListener("keypress", e => {
-        if (e.key === "Enter") {
-          loadUrl();
-        }
-      });
-
-      /**
-       * iframe에 URL 로드 함수
-       * - URL 앞에 http:// 또는 https:// 없으면 자동으로 https:// 붙임
-       * - URL 입력이 없으면 경고창 띄움
-       */
-      function loadUrl() {
+    function refreshAllIframes() {
+      const boxes = document.querySelectorAll('.urlBox');
+      boxes.forEach(box => {
+        const urlInput = box.querySelector('input[type="text"]');
+        const iframe = box.querySelector('iframe');
+        const status = box.querySelector('.status');
         const raw = urlInput.value.trim();
-        if (!raw) {
-          alert("URL을 입력하세요.");
-          return;
-        }
-        const url = raw.startsWith("http://") || raw.startsWith("https://") ? raw : "https://" + raw;
-        iframe.src = url;
-        status.textContent = "페이지 로딩 중...";
+        if (!raw) return;
+        const srcBase = raw.startsWith('http') ? raw : 'https://' + raw;
+        iframe.src = srcBase + '?_ts=' + Date.now();
+        status.textContent = `페이지 로딩 중... (${globalCount + 1}회)`;
+      });
+    }
+
+    globalRepeatBtn.addEventListener('click', () => {
+      const times = parseInt(globalCountInput.value);
+      const seconds = parseFloat(globalIntervalInput.value);
+
+      if (!times || !seconds || seconds < 0.5) {
+        alert('횟수와 0.5초 이상의 간격을 입력하세요.');
+        return;
       }
 
-      // 타이머 변수, 반복 횟수 카운터, 동작 상태 플래그
-      let timer = null;
-      let count = 0;
-      let running = false;
+      if (globalRunning) {
+        clearInterval(globalTimer);
+        globalRunning = false;
+        globalRepeatBtn.textContent = '반복 시작';
+        return;
+      }
 
-      /**
-       * 반복 시작/중단 버튼 클릭 이벤트 핸들러
-       * - 시작 시 입력값 유효성 검사
-       * - 반복 횟수, 반복 시간에 따라 새로고침 실행
-       * - 반복 중에는 버튼 텍스트와 상태 텍스트 변경
-       * - 반복 완료 또는 중단 시 타이머 클리어 및 상태 초기화
-       */
-      repeatBtn.addEventListener("click", () => {
-        if (running) {
-          // 중단 요청
-          clearInterval(timer);
-          timer = null;
-          running = false;
-          repeatBtn.textContent = "반복 시작";
-          status.textContent = "반복 중단됨";
-          return;
+      globalRunning = true;
+      globalRepeatBtn.textContent = '반복 중단';
+      globalCount = 0;
+
+      refreshAllIframes();
+      globalTimer = setInterval(() => {
+        globalCount++;
+        if (globalCount >= times) {
+          clearInterval(globalTimer);
+          globalRepeatBtn.textContent = '반복 완료';
+          globalRunning = false;
+        } else {
+          refreshAllIframes();
         }
+      }, seconds * 1000);
+    });
 
-        const times = parseInt(repeatCount.value, 10);
-        let secondsRaw = parseFloat(repeatInterval.value);
-        if (!times || !secondsRaw || secondsRaw < 0.5) {
-          alert("반복 횟수와 0.5초 이상의 간격을 입력하세요.");
-          return;
-        }
-        const seconds = secondsRaw;
+    function createUrlBox() {
+      const box = document.createElement('div');
+      box.className = 'urlBox';
 
-        count = 0;
-        running = true;
-        repeatBtn.textContent = "반복 중단";
-        status.textContent = `새로고침 진행 중... (0 / ${times})`;
+      const urlInput = document.createElement('input');
+      urlInput.type = 'text';
+      urlInput.placeholder = 'URL 입력 (예: https://example.com)';
 
-        // 반복 시작 시 최신 URL로 페이지 로드 (반복 전에 한번 로드)
-        loadUrl();
+      const iframe = document.createElement('iframe');
 
-        // 주기적 새로고침 타이머 시작
-        timer = setInterval(() => {
-          if (count >= times) {
-            // 반복 완료
-            clearInterval(timer);
-            timer = null;
-            running = false;
-            repeatBtn.textContent = "반복 시작";
-            status.textContent = "반복 완료";
-          } else {
-            // 캐시 방지 쿼리 스트링(timestamp) 붙여 새로고침
-            const srcBase = iframe.src.split('?')[0];
-            iframe.src = srcBase + '?_ts=' + Date.now();
-            count++;
-            status.textContent = `새로고침 진행 중... (${count} / ${times})`;
-          }
-        }, seconds * 1000);
+      const status = document.createElement('div');
+      status.className = 'status';
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'deleteBtn';
+      deleteBtn.textContent = '×';
+      deleteBtn.addEventListener('click', () => {
+        box.remove();
       });
 
-      // 반복횟수와 반복시간 input 박스를 감싸는 div 생성 후 추가
-      const controls = document.createElement("div");
-      controls.className = "controls";
-      controls.appendChild(repeatCount);
-      controls.appendChild(repeatInterval);
+      urlInput.addEventListener('keypress', e => {
+        if (e.key === 'Enter') {
+          const raw = urlInput.value.trim();
+          if (!raw) return;
+          const url = raw.startsWith('http') ? raw : 'https://' + raw;
+          iframe.src = url;
+          status.textContent = '페이지 로딩 중...';
+        }
+      });
 
-      // 박스에 순서대로 필요한 엘리먼트들 추가
       box.appendChild(deleteBtn);
       box.appendChild(urlInput);
-      box.appendChild(controls);
-      box.appendChild(repeatBtn);
       box.appendChild(status);
       box.appendChild(iframe);
-
       return box;
     }
 
-    // + 버튼 클릭 시 새 모니터링 박스 추가
-    addButton.addEventListener("click", () => {
+    addButton.addEventListener('click', () => {
       const newBox = createUrlBox();
       container.appendChild(newBox);
     });
 
-    // 다크모드 토글 버튼 클릭 이벤트
-    darkToggle.addEventListener("click", () => {
-      document.body.classList.toggle("dark");
-      // 다크모드 여부에 따라 토글 버튼 아이콘 변경
-      if (document.body.classList.contains("dark")) {
-        darkToggle.textContent = "☀️";  // 다크모드일 때 해 모양
-      } else {
-        darkToggle.textContent = "🌙";  // 라이트 모드일 때 달 모양
-      }
+    toggleThemeBtn.addEventListener('click', () => {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme') || 'light';
+      html.setAttribute('data-theme', current === 'light' ? 'dark' : 'light');
     });
-
-    // 페이지 로드 시 기본적으로 모니터링 박스 1개 자동 생성
-    addButton.click();
   </script>
 </body>
 </html>
